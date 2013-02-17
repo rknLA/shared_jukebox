@@ -4,11 +4,11 @@ TrackSchema = new mongoose.Schema
   user_id:
     type: mongoose.Schema.Types.ObjectId
     required: true
-  service:
-    type: String
-    required: true
-    index: true
   track_metadata:
+    service:
+      type: String
+      required: true
+      index: true
     # use track_id for rdio track keys and soundcloud
     track_id:
       type: String
@@ -42,17 +42,17 @@ TrackSchema = new mongoose.Schema
     default: false
 
 TrackSchema.static 'submit', (attrs, callback) ->
-  unless attrs.track_metadata and attrs.service
+  unless attrs.track_metadata and attrs.track_metadata.service
     callback()
     return
 
-  music_service = attrs.service
+  music_service = attrs.track_metadata.service
   id = attrs.track_metadata.track_id
   that = this
   this.findOne
     'track_metadata.track_id': id
     played: false
-    service: music_service
+    'track_metadata.service': music_service
     (err, track) ->
       if track
         callback()

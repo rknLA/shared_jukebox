@@ -1,2 +1,2 @@
 #!/bin/bash
-mongo cinema_test --eval 'db.users.remove(); db.videos.remove();'
+mongo cinema_test --eval 'db.users.remove(); db.videos.remove(); db.tracks.remove();'
