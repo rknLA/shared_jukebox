@@ -1,22 +1,22 @@
 User = require '../../models/user'
-Video = require '../../models/video'
+Track = require '../../models/track'
 
 routes = (app) ->
-  app.post '/vote/video', (req, res) ->
+  app.post '/vote/track', (req, res) ->
     accepted = req.get('Accept')
     if accepted == 'application/json'
-      youtubeId = req.body.youtube_video_id
+      trackId = req.body.track_id
       User.authenticate req, (currentUser) ->
         if currentUser
-          Video.find {}, (err, vids) ->
-          Video.findOne
-            'video_metadata.video_id': youtubeId
+          Track.find {}, (err, tracks) ->
+          Track.findOne
+            'track_metadata.track_id': trackId
             played: false
-            (err, vid) ->
+            (err, track) ->
               throw err if err
-              if vid
-                vid.vote currentUser._id
-                vid.save (err) ->
+              if track
+                track.vote currentUser._id
+                track.save (err) ->
                   throw err if err
                   res.status 200
                   res.send()

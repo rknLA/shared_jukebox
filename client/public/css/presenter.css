@@ -75,6 +75,11 @@ body {
 	float: right;
 }
 
+#current-track {
+  width: 400px;
+  height: 400px;
+}
+
 	.image-container {
 		background: #333;
 		display: block;
@@ -82,7 +87,7 @@ body {
 		margin: 10px;
 		position: relative;
 		text-align: center;
-		width: 240px;
+		width: 160px;
 	}
 
 		.image-container span {

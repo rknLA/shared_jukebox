@@ -157,19 +157,16 @@ function renderItems(id, res, data, callback) {
   lastSearchResults = res;
 		list.html('');
 
-		function thumbClick(videoMetaData) {
+		function thumbClick(trackMetaData) {
 			var _this = this;
 
-			(function(id, videoMetaData, userID) {
+			(function(id, trackMetaData, userID) {
 				console.log("Thumb button clicked");
-		          if (! 'description' in videoMetaData) {
-							  videoMetaData.description = ""; //Need this for back-end bug
-		          }
 				//fetchUser(function(userID) {
 					if(id == '#video-list') {
 						console.log("Trying to upvote video")
-						upvoteVideo(videoMetaData, userID, function() {
-							console.log("Video upvoted")
+						upvoteTrack(trackMetaData, userID, function() {
+							console.log("Track upvoted")
 							console.log(_this)
 							$(_this).addClass('voted');
 							var count = $(_this).parent().find('.video-list-right').find('.vote-count-value');
@@ -180,7 +177,7 @@ function renderItems(id, res, data, callback) {
 
 					else {
 						console.log("Trying to submit video")
-						submitVideo(videoMetaData, userID, function() {
+						submitTrack(trackMetaData, userID, function() {
 							console.log("Video submitted...do")
 							console.log(_this)
 							$(_this).addClass('voted');
@@ -188,7 +185,7 @@ function renderItems(id, res, data, callback) {
 					}
 					
 				//});
-			} (id, videoMetaData, userID))
+			} (id, trackMetaData, userID))
 		}
 
 		$.each(res.results, function(index, item) {
@@ -313,13 +310,13 @@ function setupVideoSearch(userID) {
 	});
 }
 
-function submitVideo(videoMetaData, userID, callback) {
+function submitTrack(trackMetaData, userID, callback) {
 	console.log("Submitting a video")
 
 	$.ajax({
-		url: '/videos',
+		url: '/tracks',
 		data: {
-			video_metadata: videoMetaData,
+			track_metadata: trackMetaData,
 			user_id: userID
 		},
 		type: "POST",
@@ -340,7 +337,7 @@ function refreshVideoQueue(userID, callback) {
 
   $.ajax({
     type: 'GET',
-    url: '/videos',
+    url: '/tracks',
     headers: {
       'Accept': 'application/json'
     },
@@ -356,13 +353,14 @@ function refreshVideoQueue(userID, callback) {
   });
 };
 
-function upvoteVideo(videoMetaData, userID, callback) {
+function upvoteTrack(trackMetaData, userID, callback) {
 	$.ajax({
-		url: '/vote',
+		url: '/vote/track',
 		data: {
 			//video_metadata: videoMetaData,
 			user_id: userID,
-			youtube_video_id: videoMetaData.video_id
+			track_id: trackMetaData.track_id,
+      service: trackMetaData.service
 		},
 		type: "POST",
 		headers: {

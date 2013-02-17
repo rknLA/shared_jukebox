@@ -67,7 +67,7 @@ describe 'Tracks Endpoint (submission)', ->
       before (done) ->
         rest.postJson("http://localhost:#{app.settings.port}/tracks", {
           user_id: user.id
-          track_metadata: Fixtures.track.backwards
+          track_metadata: Fixtures.track.impala
         }, {
           headers:
             'Accept': 'application/json'

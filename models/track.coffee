@@ -25,6 +25,9 @@ TrackSchema = new mongoose.Schema
     icon:
       type: String
       required: true
+    bigIcon:
+      type: String
+      required: true
   vote_count:
     type: Number
     default: 1
@@ -54,6 +57,7 @@ TrackSchema.static 'submit', (attrs, callback) ->
     played: false
     'track_metadata.service': music_service
     (err, track) ->
+      console.log "uh oh, found a duplicate track: ", track
       if track
         callback()
       else
@@ -111,7 +115,7 @@ TrackSchema.static 'finish', (track_id, callback) ->
       finishedTrack: ''
     that.unplayedQueue {limit: 4}, (queue) ->
       finishOutput.nextTrack = queue[0]
-      finishOutput.topThree queue[1..]
+      finishOutput.topThree = queue[1..]
       callback finishOutput
   else
     console.log "finishing a non-null track"

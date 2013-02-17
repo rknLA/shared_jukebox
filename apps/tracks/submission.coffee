@@ -9,6 +9,7 @@ routes = (app) ->
       trackId = req.body.track_metadata.track_id
       User.authenticate req, (currentUser) ->
         if currentUser
+          console.log req.body
           Track.submit
             user_id: currentUser._id
             track_metadata: req.body.track_metadata
@@ -18,7 +19,7 @@ routes = (app) ->
                 res.json(t)
               else
                 Track.findOne
-                  'track_metadata.track_id': trackId 
+                  'track_metadata.track_id': trackId
                   (err, track) ->
                     if err
                       res.status(422) # unprocessable entity

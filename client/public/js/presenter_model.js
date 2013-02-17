@@ -7,25 +7,25 @@
 
     function PresenterAPI(user_id) {
       this.topThree = [];
-      this.currentVideo = null;
+      this.currentTrack = null;
       this.userId = user_id;
       this.blockAsyncTopThreeUpdate = false;
     }
 
-    PresenterAPI.prototype.begin = function(nextVideoCallback, topThreeCallback) {
+    PresenterAPI.prototype.begin = function(nextTrackCallback, topThreeCallback) {
       if (topThreeCallback) this.onUpdateTopThree(topThreeCallback);
-      if (nextVideoCallback) this.onNextVideoLoaded(nextVideoCallback);
-      return this.videoDidFinish();
+      if (nextTrackCallback) this.onNextTrackLoaded(nextTrackCallback);
+      return this.trackDidFinish();
     };
 
-    PresenterAPI.prototype.videoDidFinish = function() {
-      var videoId,
+    PresenterAPI.prototype.trackDidFinish = function() {
+      var trackId,
         _this = this;
       this.blockAsyncTopThreeUpdates = true;
-      videoId = this.currentVideo && '_id' in this.currentVideo ? this.currentVideo._id : 'null';
+      trackId = this.currentTrack && '_id' in this.currentTrack ? this.currentTrack._id : 'null';
       return $.ajax({
         type: 'PUT',
-        url: "/videos/" + videoId + "/finish",
+        url: "/tracks/" + trackId + "/finish",
         headers: {
           'Accept': 'application/json'
         },
@@ -35,19 +35,19 @@
         error: this.handleAjaxError,
         success: function(data, response) {
           _this.setTopThree(data.topThree);
-          return _this.queueNextVideo(data.nextVideo);
+          return _this.queueNextTrack(data.nextTrack);
         }
       });
     };
 
-    PresenterAPI.prototype.queueNextVideo = function(video) {
-      this.currentVideo = video;
-      if (typeof this.notifyNextVideoListener === 'function') {
-        this.notifyNextVideoListener(this.currentVideo);
+    PresenterAPI.prototype.queueNextTrack = function(track) {
+      this.currentTrack = track;
+      if (typeof this.notifyNextTrackListener === 'function') {
+        this.notifyNextTrackListener(this.currentTrack);
       }
       return $.ajax({
         type: 'PUT',
-        url: "/videos/" + video._id + "/play?user_id=" + this.userId,
+        url: "/tracks/" + track._id + "/play?user_id=" + this.userId,
         headers: {
           'Accept': 'application/json'
         },
@@ -73,13 +73,13 @@
       return this.topThreeTimeout = setTimeout(function() {
         return $.ajax({
           type: 'GET',
-          url: "/videos?user_id=" + _this.userId + "&limit=3",
+          url: "/tracks?user_id=" + _this.userId + "&limit=3",
           headers: {
             'Accept': 'application/json'
           },
           error: _this.handleAjaxError,
           success: function(data, response) {
-            return _this.setTopThree(data.videos);
+            return _this.setTopThree(data.results);
           }
         });
       }, time);
@@ -90,13 +90,13 @@
       return this;
     };
 
-    PresenterAPI.prototype.onNextVideoLoaded = function(callback) {
-      this.notifyNextVideoListener = callback;
+    PresenterAPI.prototype.onNextTrackLoaded = function(callback) {
+      this.notifyNextTrackListener = callback;
       return this;
     };
 
-    PresenterAPI.prototype.videoFinished = function() {
-      return this.updateFromFinishedVideo;
+    PresenterAPI.prototype.trackFinished = function() {
+      return this.updateFromFinishedTrack;
     };
 
     return PresenterAPI;

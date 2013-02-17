@@ -49,11 +49,12 @@ mergeSearchVideoWithDbVideo = (item, callback) ->
 mergeRdioSearchTrackWithDbTrack = (item, callback) ->
   item.track_id = item.key
   item.title = item.name
+  item.service = 'Rdio'
   delete item.key
   delete item.name
   Track.findOne
-    'track.track_id': item.track_id
-    'service': 'Rdio'
+    'track_metadata.track_id': item.track_id
+    'track_metadata.service': 'Rdio'
     played: false
     (err, track) ->
       if err
@@ -86,12 +87,13 @@ SearchSchema.static 'createWithTracksQuery', (attrs, callback) ->
     query: attrs.q
     count: search.pageSize
     types: 'Track'
-    extras: '-*,name,artist,album,key,icon'
+    extras: '-*,name,artist,album,key,icon,bigIcon'
   rdioQueryStr = querystring.stringify rdioQuery
 
   app.settings.rdio.call 'search', rdioQuery, (err, res) ->
     console.log(err)
-    throw err if err
+    if err
+      callback()
     processRdioResults res, (results) ->
       search.results = results
       # do soundcloud search here
