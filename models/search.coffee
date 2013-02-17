@@ -4,6 +4,7 @@ mongoose = require 'mongoose'
 async = require 'async'
 
 Video = require './video'
+Track = require './track'
 
 SearchSchema = new mongoose.Schema
   user:
@@ -12,8 +13,11 @@ SearchSchema = new mongoose.Schema
   query:
     type: String
     required: true
-  videos:
+  results:
     type: Array
+    required: true
+  service:
+    type: String
     required: true
   pageSize:
     type: Number
@@ -25,8 +29,6 @@ consolidateVideoMetadata = (googleMetadata) ->
   consolidatedMetadata =
     title: googleMetadata.title.$t
     description: googleMetadata.media$group.media$description.$t
-    author: googleMetadata.media$group.media$credit[0].yt$display
-    thumbnail: googleMetadata.media$group.media$thumbnail
     video_id: googleMetadata.media$group.yt$videoid.$t
 
 mergeSearchVideoWithDbVideo = (item, callback) ->
@@ -42,35 +44,55 @@ mergeSearchVideoWithDbVideo = (item, callback) ->
         votes: if vid then vid.votes else []
       callback null, searchResult
 
+mergeRdioSearchTrackWithDbTrack = (item, callback) ->
+  item.track_id = item.key
+  item.title = item.name
+  delete item.key
+  delete item.name
+  Track.findOne
+    'track.track_id': item.track_id
+    'service': 'Rdio'
+    played: false
+    (err, track) ->
+      if err
+        callback err
+        return
+      searchResult =
+        track_metadata: item
+        submission_id: if track then track.id else null
+        vote_count: if track then track.vote_count else 0
+        votes: if track then track.votes else []
+      callback null, searchResult
 
-consolidateYouTubeResults = (jsonInput, callback) ->
-  output = []
-  async.map jsonInput.feed.entry, mergeSearchVideoWithDbVideo, (err, results) ->
+processRdioResults = (raw, callback) ->
+  results = JSON.parse(raw)
+  tracks = results.result.results
+  async.map tracks, mergeRdioSearchTrackWithDbTrack, (err, results) ->
     throw err if err
     callback results
 
-SearchSchema.static 'createWithQuery', (attrs, callback) ->
+SearchSchema.static 'createWithTracksQuery', (attrs, callback) ->
   search = new this()
   search.user = attrs.user_id
   search.query = attrs.q
+  search.service = 'Rdio'
   search.pageSize = 20
 
-  query =
-    q: attrs.q
-    'max-results': 20
-    v: 2
-    alt: 'json'
-  queryStr = querystring.stringify query
-  rest.get("https://gdata.youtube.com/feeds/api/videos?#{queryStr}", {
-    headers:
-      'X-GData-Key': "key=#{attrs.googleApiKey}"
-  }).on 'complete', (data, response) ->
-    consolidateYouTubeResults data, (consolidated) ->
-      search.videos = consolidated
+  rdioQuery =
+    query: attrs.q
+    count: search.pageSize
+    types: 'Track'
+    extras: '-*,name,artist,album,key,icon'
+  rdioQueryStr = querystring.stringify rdioQuery
+
+  app.get('rdio').call 'search', rdioQuery, (err, res) ->
+    throw err if err
+    processRdioResults res, (results) ->
+      search.results = results
+      # do soundcloud search here
       search.save (e, doc) ->
         throw e if e
         callback doc
-
 
 SearchSchema.static 'page', (search_id, page_number, callback) ->
   callback

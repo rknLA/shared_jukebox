@@ -2,15 +2,17 @@ User = require '../../models/user'
 Search = require '../../models/search'
 
 routes = (app) ->
-  app.get '/search/youtube', (req, res) ->
+  app.get '/search/tracks', (req, res) ->
     accepted = req.get 'Accept'
+    console.log "searchin' for tracks"
     if accepted == 'application/json'
       User.authenticate req, (currentUser) ->
         if currentUser
           # new search
-          Search.createWithVideoQuery
+          Search.createWithTracksQuery
             q: req.query.q
-            googleApiKey: app.settings.googleApiKey
+            rdioCreds: app.settings.rdioKeys
+            soundcloudCreds: app.settings.soundcloudKeys
             user_id: currentUser._id
             (results) ->
               res.status 201

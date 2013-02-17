@@ -7,7 +7,8 @@ var express = require('express')
   , http = require('http')
   , path = require('path')
   , mongoose = require('mongoose')
-  , keys = require('./keys');
+  , keys = require('./keys')
+  , rdio = require('./models/rdio');
 
 require('coffee-script');
 
@@ -18,12 +19,13 @@ var allowCORS = function(req, res, next) {
     res.header('Access-Control-Allow-Methods', '*');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
-}
+};
 
 app.configure(function(){
   app.set('port', process.env.PORT || 3000);
   app.set('views', __dirname + '/views');
   app.set('googleApiKey', keys.googleApiKey);
+  app.set('rdioKeys', keys.rdioApiKeys);
   app.set('view engine', 'jade');
   app.use(express.favicon());
   app.use(express.logger('dev'));
@@ -50,12 +52,24 @@ app.configure('production', function() {
   app.set('db', mongoose.connect(keys.mongoUrl));
 });
 
+app.configure(function() {
+  //initialize rdio
+  rdioConfig = {
+    consumerKey: keys.rdioApiKeys.consumerKey,
+    consumerSecret: keys.rdioApiKeys.consumerSecret,
+    callbackUrl: keys.rdioApiKeys.callbackUrl || "http://localhost:3000"
+  };
+  rdio.initialize(rdioConfig);
+  app.set('rdio', rdio);
+});
+
 require('./apps/videos/submission')(app);
 require('./apps/videos/upvote')(app);
 require('./apps/videos/queue')(app);
 require('./apps/videos/presenter')(app);
 require('./apps/users/create')(app);
 require('./apps/search/video_search')(app);
+require('./apps/search/track_search')(app);
 
 app.options('*', function(req, res) {
   res.status(200);

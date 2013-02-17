@@ -1,6 +1,6 @@
 querystring = require 'querystring'
 
-describe "Video Search Endpoint", ->
+describe "Rdio Search Endpoint", ->
   user = null
 
   before (done) ->
@@ -11,16 +11,17 @@ describe "Video Search Endpoint", ->
         done()
 
   describe 'new complete searches', ->
-    # this is only really semi-valid, since testing this relies on youtube.
+    # oh good, a test that relies on a web service.
     searchResults = null
     searchResponse = null
 
     before (done) ->
       data =
-        q: 'maru jumps out of a box'
+        type: 'music'
+        q: 'power'
         user_id: user.id
       dataStr = querystring.stringify data
-      rest.get("http://localhost:#{app.settings.port}/search?#{dataStr}",
+      rest.get("http://localhost:#{app.settings.port}/search/tracks?#{dataStr}",
         headers:
           'Accept': 'application/json'
       ).on 'complete', (data, response) ->
@@ -34,20 +35,16 @@ describe "Video Search Endpoint", ->
     it 'should have a search id', ->
       assert.notEqual searchResults._id, null
 
-    it 'should have an array of video metadata', ->
-      searchResults.videos.length.should.equal 20
+    it 'should have an array of track metadata', ->
+      searchResults.results.length.should.equal 20
 
-    describe 'Each video', ->
+    describe 'Each Track', ->
 
       it 'should have a submission_id', ->
-        assert ('submission_id' of searchResults.videos[0]), "searched videos should have submission_id fields, even if they're null"
+        assert ('submission_id' of searchResults.results[0]), "searched tracks should have submission_id fields, even if they're null"
 
       it 'should have a vote count', ->
-        assert ('vote_count' of searchResults.videos[0]), "searched videos should have a vote_count, even if it's 0"
+        assert ('vote_count' of searchResults.results[0]), "searched tracks should have a vote_count, even if it's 0"
 
       it 'should have a vote list', ->
-        assert ('votes' of searchResults.videos[0]), "searched videos should have a vote array, even if it's empty"
-
-
-
-
+        assert ('votes' of searchResults.results[0]), "searched tracks should have a vote array, even if it's empty"
