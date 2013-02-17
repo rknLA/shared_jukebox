@@ -3,14 +3,15 @@
  * Module dependencies.
  */
 
+require('coffee-script');
+
 var express = require('express')
   , http = require('http')
   , path = require('path')
   , mongoose = require('mongoose')
   , keys = require('./keys')
-  , rdio = require('./models/rdio');
+  , Rdio = require('./models/rdio');
 
-require('coffee-script');
 
 var app = module.exports = express();
 
@@ -59,8 +60,9 @@ app.configure(function() {
     consumerSecret: keys.rdioApiKeys.consumerSecret,
     callbackUrl: keys.rdioApiKeys.callbackUrl || "http://localhost:3000"
   };
-  rdio.initialize(rdioConfig);
-  app.set('rdio', rdio);
+  if (!app.settings.rdio) {
+    app.set('rdio', new Rdio(rdioConfig));
+  }
 });
 
 require('./apps/videos/submission')(app);

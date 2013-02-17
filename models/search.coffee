@@ -3,6 +3,8 @@ rest = require 'restler'
 mongoose = require 'mongoose'
 async = require 'async'
 
+app = require '../server'
+
 Video = require './video'
 Track = require './track'
 
@@ -68,6 +70,8 @@ processRdioResults = (raw, callback) ->
   results = JSON.parse(raw)
   tracks = results.result.results
   async.map tracks, mergeRdioSearchTrackWithDbTrack, (err, results) ->
+    if err
+      console.log "AN ERROR IN PROCESS RDIO RESULTS", err
     throw err if err
     callback results
 
@@ -85,7 +89,8 @@ SearchSchema.static 'createWithTracksQuery', (attrs, callback) ->
     extras: '-*,name,artist,album,key,icon'
   rdioQueryStr = querystring.stringify rdioQuery
 
-  app.get('rdio').call 'search', rdioQuery, (err, res) ->
+  app.settings.rdio.call 'search', rdioQuery, (err, res) ->
+    console.log(err)
     throw err if err
     processRdioResults res, (results) ->
       search.results = results

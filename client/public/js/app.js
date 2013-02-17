@@ -122,10 +122,10 @@ function fetchUser(callback) {
 
 /* I don't think we use this one anymore */
 function getPlaylist(userID, callback) {
-	console.log("getting playlist")
+	console.log("getting playlist");
 
 	$.ajax({
-		url: '/search',
+		url: '/search/tracks',
 		type: "GET",
 		data: {
 			q: "katie%20perry",
@@ -136,9 +136,9 @@ function getPlaylist(userID, callback) {
 		},                                                             
 		success: function(res) {
 			console.log("Got the playlist");
-			videos = res.videos;
+			results = res.results;
 			if(typeof callback === "function") {
-				console.log(res)
+				console.log(res);
 				callback(res);
 			}
 		},
@@ -153,7 +153,7 @@ function renderItems(id, res, data, callback) {
 
 	fetchUser(function(userID) {
 		var list = $(id);
-		console.log(res)
+		console.log(res);
   lastSearchResults = res;
 		list.html('');
 
@@ -191,14 +191,14 @@ function renderItems(id, res, data, callback) {
 			} (id, videoMetaData, userID))
 		}
 
-		$.each(res.videos, function(index, video) {
+		$.each(res.results, function(index, item) {
 			//List element
 			var li = document.createElement('li');
 
 			//Anchor element
 			var a  = document.createElement('a');
 			a.href = '#';
-			//a.innerHTML = video.video_metadata.title;
+			//a.innerHTML = item.video_metadata.title;
 
 			//Left
 			var left = document.createElement('div');
@@ -207,8 +207,8 @@ function renderItems(id, res, data, callback) {
 			//Image
 			var img = document.createElement('img');
 			img.className += ' video-list-img';
-			if(video.video_metadata.thumbnail[0] && video.video_metadata.thumbnail[0].url) {
-				img.src = video.video_metadata.thumbnail[0].url;
+			if(item.track_metadata.icon) {
+				img.src = item.track_metadata.icon;
 			}
 			
 			left.appendChild(img);
@@ -219,13 +219,13 @@ function renderItems(id, res, data, callback) {
 
 			//Title
 			var h3 = document.createElement('h3');
-			h3.innerHTML = video.video_metadata.title;
+			h3.innerHTML = item.track_metadata.title;
 			right.appendChild(h3);
 
 			//Description
 			var span = document.createElement('span');
-			//span.innerHTML = video.video_metadata.description;
-			span.innerHTML = "";
+			//span.innerHTML = item.track_metadata.description;
+			span.innerHTML = item.track_metadata.artist; 
 			right.appendChild(span);
 
 			//Append left and right to anchor
@@ -237,12 +237,12 @@ function renderItems(id, res, data, callback) {
 			thumb.className += ' thumb';
 
 			if(id == '#video-list') {
-				if(!$.inArray(userID, video.votes)) {
+				if(!$.inArray(userID, item.votes)) {
 					thumb.className += ' voted';
 				}
 
 			} else {
-				if(!$.inArray(userID, video.votes)) {
+				if(!$.inArray(userID, item.votes)) {
 					thumb.className += ' voted';
 				}
 			}
@@ -250,7 +250,7 @@ function renderItems(id, res, data, callback) {
 			thumb.type = 'button';
 			thumb.innerHTML = '&nbsp;';
 			thumb.onclick = function(e) {
-				thumbClick.call(this, video.video_metadata);
+				thumbClick.call(this, item.track_metadata);
 			};
 			a.appendChild(thumb);
 
@@ -260,12 +260,12 @@ function renderItems(id, res, data, callback) {
 			//Vote Count
 			var voteCount = document.createElement('span');
 			voteCount.className += " vote-count";
-			if(video.vote_count == 1) {
-				span.innerHTML = "<span class='vote-count-value'>" + video.vote_count + "</span><span> vote</span>";
+			if(item.vote_count == 1) {
+				span.innerHTML = "<span class='vote-count-value'>" + item.vote_count + "</span><span> vote</span>";
 			}
 
-			if(video.vote_count > 1) {
-				span.innerHTML = "<span class='vote-count-value'>" + video.vote_count + "</span><span> votes</span>";
+			if(item.vote_count > 1) {
+				span.innerHTML = "<span class='vote-count-value'>" + item.vote_count + "</span><span> votes</span>";
 			}
 			li.appendChild(voteCount);
 
@@ -294,7 +294,7 @@ function setupVideoSearch(userID) {
 		timer = setTimeout(function() {
 			console.log("Timer cleared..fetching videos...");
 			$.ajax({
-				url: '/search',
+				url: '/search/tracks',
 				type: "GET",
 				data: {
 					q: $(_this).val(),
